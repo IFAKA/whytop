@@ -1,5 +1,5 @@
 use crate::{
-    ai::{AiEngine, AiEvent, OpenAiLocalEngine},
+    ai::{AiEngine, AiEvent, DemoEngine, OpenAiLocalEngine},
     process::ProcessTable,
 };
 use anyhow::Result;
@@ -106,7 +106,7 @@ struct App {
     rx: Option<mpsc::Receiver<AiEvent>>,
     task: Option<JoinHandle<()>>,
     cancel: CancellationToken,
-    engine: OpenAiLocalEngine,
+    engine: Engine,
     view: View,
     chat_process: Option<crate::process::ProcessSnapshot>,
     chat_history: Vec<ChatTurn>,
@@ -117,8 +117,9 @@ struct App {
 
 impl App {
     fn new() -> Self {
+        let demo = std::env::var("WHYTOP_DEMO").ok().as_deref() == Some("1");
         Self {
-            table: ProcessTable::new(),
+            table: ProcessTable::with_demo(demo),
             selected: 0,
             table_state: TableState::default(),
             question: String::new(),
@@ -127,13 +128,21 @@ impl App {
             rx: None,
             task: None,
             cancel: CancellationToken::new(),
-            engine: OpenAiLocalEngine::from_env(),
+            engine: if demo {
+                Engine::Demo(DemoEngine)
+            } else {
+                Engine::Local(OpenAiLocalEngine::from_env())
+            },
             view: View::Monitor,
             chat_process: None,
             chat_history: Vec::new(),
             active_question: None,
             chat_scroll: 0,
-            sort_mode: SortMode::CpuDesc,
+            sort_mode: if demo {
+                SortMode::Normal
+            } else {
+                SortMode::CpuDesc
+            },
         }
     }
     async fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
@@ -514,6 +523,34 @@ impl App {
             ),
             chunks[2],
         );
+    }
+}
+
+#[derive(Clone)]
+enum Engine {
+    Local(OpenAiLocalEngine),
+    Demo(DemoEngine),
+}
+
+#[async_trait::async_trait]
+impl AiEngine for Engine {
+    async fn explain(
+        &self,
+        snapshot: crate::process::ProcessSnapshot,
+        question: String,
+        events: mpsc::Sender<AiEvent>,
+        cancel: CancellationToken,
+    ) -> Result<()> {
+        match self {
+            Self::Local(engine) => engine.explain(snapshot, question, events, cancel).await,
+            Self::Demo(engine) => engine.explain(snapshot, question, events, cancel).await,
+        }
+    }
+    fn label(&self) -> &'static str {
+        match self {
+            Self::Local(engine) => engine.label(),
+            Self::Demo(engine) => engine.label(),
+        }
     }
 }
 

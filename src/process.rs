@@ -32,17 +32,23 @@ impl ProcessSnapshot {
 pub struct ProcessTable {
     system: System,
     rows: Vec<ProcessSnapshot>,
+    demo: bool,
 }
 
 impl ProcessTable {
-    pub fn new() -> Self {
+    pub fn with_demo(demo: bool) -> Self {
         Self {
             system: System::new_all(),
             rows: Vec::new(),
+            demo,
         }
     }
 
     pub fn refresh(&mut self) {
+        if self.demo {
+            self.rows = demo_processes();
+            return;
+        }
         self.system.refresh_processes(ProcessesToUpdate::All, true);
         let processes = self.system.processes();
         #[cfg(target_os = "macos")]
@@ -154,6 +160,96 @@ impl ProcessTable {
     {
         self.rows.sort_by(compare);
     }
+}
+
+fn demo_processes() -> Vec<ProcessSnapshot> {
+    [
+        (
+            412,
+            12.8,
+            182 * 1024 * 1024,
+            "whytop-demo-agent",
+            Some(1),
+            "launchd",
+            2,
+            "/usr/local/bin/whytop-demo-agent",
+        ),
+        (
+            928,
+            8.4,
+            96 * 1024 * 1024,
+            "WindowServer",
+            Some(1),
+            "launchd",
+            4,
+            "/System/Library/PrivateFrameworks/WindowServer.framework/WindowServer",
+        ),
+        (
+            1440,
+            5.7,
+            74 * 1024 * 1024,
+            "local-model-worker",
+            Some(412),
+            "whytop-demo-agent",
+            1,
+            "/opt/local/bin/local-model-worker",
+        ),
+        (
+            2081,
+            3.2,
+            48 * 1024 * 1024,
+            "Code Helper",
+            Some(412),
+            "whytop-demo-agent",
+            3,
+            "/Applications/Code.app/Contents/MacOS/Code Helper",
+        ),
+        (
+            3176,
+            1.1,
+            31 * 1024 * 1024,
+            "Terminal",
+            Some(412),
+            "whytop-demo-agent",
+            0,
+            "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",
+        ),
+        (
+            5012,
+            0.6,
+            22 * 1024 * 1024,
+            "notificationd",
+            Some(1),
+            "launchd",
+            0,
+            "/usr/sbin/notificationd",
+        ),
+    ]
+    .into_iter()
+    .map(
+        |(pid, cpu, memory, name, parent_pid, parent_name, child_count, executable)| {
+            ProcessSnapshot {
+                pid,
+                start_time: 1_720_000_000 + pid as u64,
+                parent_pid,
+                name: name.into(),
+                cpu_percent: cpu,
+                memory_bytes: memory,
+                executable: Some(executable.into()),
+                command_line: Some(name.into()),
+                parent_name: Some(parent_name.into()),
+                child_count,
+                file_activity: Vec::new(),
+                network_activity: Vec::new(),
+                signature: None,
+                unavailable: vec!["file activity", "network activity", "signature metadata"]
+                    .into_iter()
+                    .map(String::from)
+                    .collect(),
+            }
+        },
+    )
+    .collect()
 }
 
 #[cfg(target_os = "macos")]

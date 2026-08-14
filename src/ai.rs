@@ -5,6 +5,7 @@ use futures_util::StreamExt;
 use reqwest::Client;
 use serde::Deserialize;
 use tokio::sync::mpsc::Sender;
+use tokio::time::{sleep, Duration};
 use tokio_util::sync::CancellationToken;
 
 #[derive(Debug, Clone)]
@@ -155,6 +156,58 @@ impl AiEngine for OpenAiLocalEngine {
     }
     fn label(&self) -> &'static str {
         self.label
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct DemoEngine;
+
+#[async_trait]
+impl AiEngine for DemoEngine {
+    async fn explain(
+        &self,
+        snapshot: ProcessSnapshot,
+        question: String,
+        events: Sender<AiEvent>,
+        cancel: CancellationToken,
+    ) -> Result<()> {
+        let started = std::time::Instant::now();
+        let _ = events.send(AiEvent::Started).await;
+        let text = if question.to_ascii_lowercase().contains("safe")
+            || question.to_ascii_lowercase().contains("network")
+        {
+            format!("Observed: {} (PID {}) is using {:.1}% CPU and {} of memory. The snapshot shows no captured file or network activity.\n\nInference: the available evidence does not establish what the process is sending or whether it is safe. whytop stays read-only and explains only local, observed context.", snapshot.name, snapshot.pid, snapshot.cpu_percent, format_demo_bytes(snapshot.memory_bytes))
+        } else {
+            format!("Observed: {} (PID {}) is the busiest visible process at {:.1}% CPU, using {} of memory. Its parent is {} and it has {} child processes.\n\nContext: executable metadata is present, while file activity, network activity, and signature metadata are unavailable. This is read-only process context explained locally—not a claim about intent.", snapshot.name, snapshot.pid, snapshot.cpu_percent, format_demo_bytes(snapshot.memory_bytes), snapshot.parent_name.as_deref().unwrap_or("unknown"), snapshot.child_count)
+        };
+        let mut count = 0;
+        for word in text.split_inclusive(' ') {
+            tokio::select! {
+                _ = cancel.cancelled() => return Err(anyhow!("cancelled")),
+                _ = sleep(Duration::from_millis(42)) => {}
+            }
+            count += 1;
+            let _ = events.send(AiEvent::Token(word.to_string())).await;
+        }
+        let _ = events
+            .send(AiEvent::Finished {
+                ttft_ms: started.elapsed().as_millis(),
+                tokens: count,
+            })
+            .await;
+        Ok(())
+    }
+
+    fn label(&self) -> &'static str {
+        "demo local AI"
+    }
+}
+
+fn format_demo_bytes(n: u64) -> String {
+    if n >= 1024 * 1024 {
+        format!("{:.0} MB", n as f64 / 1024f64.powi(2))
+    } else {
+        format!("{} KB", n / 1024)
     }
 }
 

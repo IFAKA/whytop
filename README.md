@@ -40,6 +40,14 @@ The process table works without an AI runtime. Start a supported local model ser
 
 The first numeric sort is largest-first and the first name sort is A–Z. Press the same key again for the opposite direction, then once more to return to normal PID order.
 
+## Demo
+
+[![whytop walkthrough](demo/whytop.gif)](demo/whytop.cast)
+
+The walkthrough shows the read-only monitor, CPU sorting, process context, and
+local AI answers streaming in the terminal. It is reproducible without a model
+server; see [demo/README.md](demo/README.md) for recording and replay commands.
+
 ## Local AI runtimes
 
 Both adapters use an OpenAI-compatible local HTTP API.
