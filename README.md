@@ -5,7 +5,6 @@
 `whytop` is a privacy-first alternative to `top` and `htop` for understanding what is running on your computer. Inspect a process, ask a plain-language question, and get an explanation from a local OpenAI-compatible model—without giving process evidence to a hosted service.
 
 [![CI](https://github.com/IFAKA/whytop/actions/workflows/ci.yml/badge.svg)](https://github.com/IFAKA/whytop/actions/workflows/ci.yml)
-[![Crates.io](https://img.shields.io/crates/v/whytop.svg)](https://crates.io/crates/whytop)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Why whytop?
