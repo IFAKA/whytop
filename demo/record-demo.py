@@ -55,14 +55,13 @@ def main() -> int:
     # (delay from previous action, bytes to send). The pauses are intentional:
     # they establish the table, make sorting legible, and show streaming.
     actions = [
-        (3.5, b"c"),
         (2.5, b"j"),
-        (2.5, b"\r"),
-        (6.0, b""),
-        (2.0, b"Is it safe to inspect?", 0.08),
+        (1.5, b"\r"),
+        (4.5, b""),
+        (1.5, b"Is it safe?", 0.08),
         (0.5, b"\r"),
-        (6.0, b""),
-        (1.5, b"\x1b"),
+        (4.5, b""),
+        (1.0, b"\x1b"),
         (1.0, b"q"),
     ]
     deadline = time.monotonic() + 70
