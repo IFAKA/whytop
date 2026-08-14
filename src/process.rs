@@ -59,10 +59,17 @@ impl ProcessTable {
                 let pid = p.pid().as_u32();
                 #[cfg(target_os = "macos")]
                 let fallback = macos_metrics.get(&pid);
-                let parent_pid = p
-                    .parent()
-                    .map(Pid::as_u32)
-                    .or_else(|| fallback.and_then(|m| m.parent_pid));
+                let parent_pid = {
+                    let parent_pid = p.parent().map(Pid::as_u32);
+                    #[cfg(target_os = "macos")]
+                    {
+                        parent_pid.or_else(|| fallback.and_then(|m| m.parent_pid))
+                    }
+                    #[cfg(not(target_os = "macos"))]
+                    {
+                        parent_pid
+                    }
+                };
                 let parent_name = parent_pid
                     .and_then(|id| processes.get(&Pid::from_u32(id)))
                     .map(|x| x.name().to_string_lossy().into_owned())
