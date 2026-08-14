@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 description = "Read-only cross-platform process monitor with local AI explanations"
 license = "MIT"
+repository = "https://github.com/IFAKA/whytop"
+homepage = "https://github.com/IFAKA/whytop"
+readme = "README.md"
+keywords = ["process-monitor", "system-monitor", "terminal", "tui", "local-ai"]
+categories = ["command-line-utilities", "os", "visualization"]
 
 [dependencies]
 anyhow = "1"
