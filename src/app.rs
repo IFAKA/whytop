@@ -431,7 +431,13 @@ impl App {
                 Constraint::Min(20),
             ],
         )
-        .row_highlight_style(Style::default().bg(Color::DarkGray))
+        .row_highlight_style(
+            Style::default()
+                .fg(Color::White)
+                .bg(Color::Blue)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("▸ ")
         .header(
             Row::new(vec!["PID", "NAME", "CPU", "MEMORY", "PARENT"])
                 .style(Style::default().fg(Color::Yellow)),

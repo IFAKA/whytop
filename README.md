@@ -44,9 +44,9 @@ The first numeric sort is largest-first and the first name sort is A–Z. Press 
 
 [![whytop walkthrough](demo/whytop.gif)](demo/whytop.cast)
 
-The walkthrough shows the read-only monitor, CPU sorting, process context, and
-local AI answers streaming in the terminal. It is reproducible without a model
-server; see [demo/README.md](demo/README.md) for recording and replay commands.
+The walkthrough shows the read-only monitor, process selection, and local AI
+answers streaming in the terminal. It is reproducible without a model server;
+see [demo/README.md](demo/README.md) for recording and replay commands.
 
 ## Local AI runtimes
 
